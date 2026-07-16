@@ -1,0 +1,22 @@
+name: Build with VS2022
+
+on:
+  push:
+    branches: [ main, refactor/code-cleanup ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Build Solution
+        run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64 /restore
+
