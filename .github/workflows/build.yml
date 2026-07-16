@@ -17,8 +17,18 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    - name: Restore NuGet packages
-      run: msbuild -t:restore TSP_GA.sln
+    - name: Restore NuGet packages (Verbose)
+      run: nuget restore TSP_GA.sln -Verbosity detailed
+
+    - name: Check if packages folder exists
+      run: |
+        if (Test-Path "packages\raylib.5.5.0") {
+          Write-Host "✅ raylib package found!"
+          dir packages\raylib.5.5.0
+        } else {
+          Write-Host "❌ raylib package NOT found! Trying manual install..."
+          nuget install raylib -Version 5.5.0 -OutputDirectory packages
+        }
 
     - name: Build Solution
       run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64
