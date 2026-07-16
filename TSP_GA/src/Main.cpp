@@ -28,7 +28,7 @@ int main() {
     scanf("%lf", &mutation_rate);
 
     city_t* cities = (city_t*)malloc(n * sizeof(city_t));
-    init_cities(cities, n);
+    input_cities(cities, n);   // <-- uses the new parenthesized input
 
     population_t* pop = init_population(cities, n, pop_size);
     evaluate_fitness(pop, cities, n);
@@ -37,22 +37,56 @@ int main() {
     SetTargetFPS(60);
 
     int gen = 0;
+    int best = 0; // will store index of best route
+
+    // ---------- MAIN GENETIC ALGORITHM LOOP ----------
     while (!WindowShouldClose() && gen < generations) {
         next_generation(pop, cities, n, mutation_rate);
         evaluate_fitness(pop, cities, n);
         gen++;
 
-        BeginDrawing();
-        ClearBackground(BLACK);
-        int best = 0;
-        for (int i = 1; i < pop->size; i++)
+        // Find best route of this generation
+        best = 0;
+        for (int i = 1; i < pop->size; i++) {
             if (pop->routes[i].fitness < pop->routes[best].fitness)
                 best = i;
+        }
+
+        BeginDrawing();
+        ClearBackground(BLACK);
         draw_route(cities, pop->routes[best].route, n, gen);
         EndDrawing();
     }
 
+    // ---------- FINAL SCREEN: show the best solution and wait ----------
+    // Re-find best one last time (in case loop exited due to window close)
+    best = 0;
+    for (int i = 1; i < pop->size; i++) {
+        if (pop->routes[i].fitness < pop->routes[best].fitness)
+            best = i;
+    }
+
+    // Display final result and hold the window open
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(BLACK);
+        draw_route(cities, pop->routes[best].route, n, gen);
+        DrawText("FINAL SOLUTION - Press any key or ESC to close", 10, 30, 20, YELLOW);
+        EndDrawing();
+
+        if (GetKeyPressed() != 0) break;  // any key closes the graphics window
+        WaitTime(0.1); // prevent 100% CPU usage
+    }
+
     CloseWindow();
+
+    // ---------- CONSOLE PAUSE ----------
+    // Print the best length and wait for Enter
+    printf("\nBest route length found: %.2f\n", pop->routes[best].fitness);
+    printf("Press Enter to close this console...");
+    getchar(); // consume leftover newline from previous scanf
+    getchar(); // wait for actual Enter press
+
     free(cities);
     free_population(pop);
     return 0;
