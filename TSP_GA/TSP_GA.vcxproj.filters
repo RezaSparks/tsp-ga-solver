@@ -13,15 +13,45 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ga">
+      <UniqueIdentifier>{3bcec6d8-e264-442a-bd92-c398fe601b33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tsp">
+      <UniqueIdentifier>{7fa41f85-d077-4d94-8a1b-f4a295e7dd57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="visualization">
+      <UniqueIdentifier>{4e4561dd-6dfc-4830-bb13-b42eaa84af6e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="scr\Main.cpp">
+    <ClCompile Include="src\Main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="city.cpp">
+      <Filter>tsp</Filter>
+    </ClCompile>
+    <ClCompile Include="population.cpp">
+      <Filter>ga</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer.cpp">
+      <Filter>visualization</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="scr\GetFuncs.h">
+    <ClInclude Include="src\GetFuncs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tsp\city.h">
+      <Filter>tsp</Filter>
+    </ClInclude>
+    <ClInclude Include="ga\population.h">
+      <Filter>ga</Filter>
+    </ClInclude>
+    <ClInclude Include="visualization\renderer.h">
+      <Filter>visualization</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

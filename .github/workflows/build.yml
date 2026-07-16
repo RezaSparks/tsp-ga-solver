@@ -14,9 +14,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore TSP_GA.sln
+
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v2
 
       - name: Build Solution
-        run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64 /restore
-
+        run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64

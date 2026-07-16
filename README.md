@@ -1,46 +1,36 @@
-# TSP Genetic Algorithm Solver in C
+# TSP Genetic Algorithm Solver
 
-This project provides an efficient solution to the **Traveling Salesman Problem (TSP)** using a **Genetic Algorithm** implemented in C. It includes a real-time graphical visualization of the path optimization process using the **Raylib** library.
+[![Build Status](https://github.com/RezaSparks/tsp-genetic-algorithm-c/actions/workflows/build.yml/badge.svg)](https://github.com/RezaSparks/tsp-genetic-algorithm-c/actions)
+
+A cross-platform implementation of a Genetic Algorithm to solve the Traveling Salesman Problem (TSP) with real-time visualization using Raylib.
 
 ## Features
-- **Genetic Algorithm:** Implements tournament selection, ordered crossover, and mutation to find the shortest path.
-- **Real-time Visualization:** Watch the algorithm evolve and optimize the route dynamically using Raylib.
-- **Dynamic Input:** Users can input the number of cities and their specific coordinates.
-- **Optimized Calculation:** Efficient Euclidean distance calculation and path evaluation.
+- ✅ Real-time visualization of the evolving route
+- ✅ Modular C++ architecture (GA, TSP core, Renderer)
+- ✅ Tournament selection + Ordered Crossover (OX)
+- ✅ Elitism to preserve the best solutions
+- ✅ Configurable population size, generations, and mutation rate
 
-## Requirements
-- **Compiler:** Any C compiler (e.g., GCC).
-- **Library:** [Raylib](https://www.raylib.com/) must be installed to compile and run the project.
+## Demo
+*(Insert a screenshot here! Press Print Screen while the app runs, save as `screenshot.png` in the repo, and link it)*
+![Demo](screenshot.png)
 
-## How to Run
-1. Ensure you have the Raylib library installed on your system.
-2. Compile the code (linking with raylib):
-```bash
-   gcc main.c -lraylib -o tsp_solver
-```   
+## How to Build (Visual Studio 2022)
+1. Clone the repository.
+2. Open `TSP_GA.sln`.
+3. Install Raylib via NuGet (Project → Manage NuGet Packages → Browse → `raylib`).
+4. Build and run (`F5`).
 
+## How to Use
+Run the executable. Enter the number of cities, population size, generations, and mutation rate when prompted. Watch the algorithm find a shorter route in real-time!
 
----
+## Project Structure
+- `/src` - Main entry point
+- `/ga` - Genetic Algorithm core (selection, crossover, mutation)
+- `/tsp` - City and distance logic
+- `/visualization` - Raylib rendering
 
-## References & Resources
-
-### Academic & Theoretical Foundations
-*   **[ScienceDirect: Genetic Algorithm](https://www.sciencedirect.com/topics/engineering/genetic-algorithm)**: Used for understanding the theoretical foundations and engineering applications of Genetic Algorithms.
-*   **[Traveling Salesman Problem (Wikipedia)](https://en.wikipedia.org/wiki/Travelling_salesman_problem)**: Classic reference for defining the constraints and objectives of the TSP.
-
-### Tutorials & Inspiration
-*   **[YouTube: Genetic Algorithm for TSP](https://youtu.be/kHyNqSnzP8Y)**: Provided essential guidance on implementing the core logic of the Genetic Algorithm for solving path optimization problems.
-
-### Libraries & Tools
-*   **[Raylib](https://www.raylib.com/)**: Used for real-time graphics rendering and visualization.
-    *   [Raylib Cheatsheet](https://www.raylib.com/cheatsheet/cheatsheet.html)
-
----
-
-## Acknowledgments
-This project was developed as the final assignment for the Computer Programming course, under the supervision of **Professor [Mahdi Saadatmand]** at [Ferdowsi University of Mashhad]. 
-
-I would like to express my gratitude for their guidance and the insights gained throughout the semester.
-
----
-
+## Future Improvements
+- Command-line argument parsing
+- Support for TSPLIB standard benchmarks
+- Additional crossover operators (PMX, Cycle)
