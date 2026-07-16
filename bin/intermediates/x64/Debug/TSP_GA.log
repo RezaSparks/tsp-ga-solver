@@ -1,4 +1,5 @@
 ﻿  Main.cpp
-C:\dev\TSP_GA\TSP_GA\scr\Main.cpp(79,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\dev\TSP_GA\TSP_GA\scr\Main.cpp(340,14): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\dev\TSP_GA\TSP_GA\src\Main.cpp(80,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\dev\TSP_GA\TSP_GA\src\Main.cpp(341,14): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   TSP_GA.vcxproj -> C:\dev\TSP_GA\bin\x64\Debug\TSP_GA.exe

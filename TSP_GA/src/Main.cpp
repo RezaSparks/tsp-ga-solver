@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
@@ -253,7 +254,7 @@ int main()
 
 
 
-	_getch();
+	getchar();
 	return 0;
 }
 
@@ -264,7 +265,7 @@ void citiesNumber()
 	do
 	{
 		printf("Please enter the number of cities on the way:(Maximum %d) \n", N);
-		scanf_s("%d", &n);
+		scanf("%d", &n);
 
 		if (n > N || n < 2)
 		{
