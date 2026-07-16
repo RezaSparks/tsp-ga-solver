@@ -17,11 +17,11 @@ jobs:
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
-      - name: Restore NuGet packages (raylib)
-        run: nuget restore TSP_GA.sln -NonInteractive
+      - name: Restore NuGet packages
+        run: nuget restore TSP_GA.sln
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.1
 
       - name: Build Solution
-        run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64 /restore
+        run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64
