@@ -11,24 +11,17 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
 
-    - name: Restore NuGet packages (Verbose)
-      run: nuget restore TSP_GA.sln -Verbosity detailed
+      - name: Restore NuGet packages
+        run: nuget restore TSP_GA.sln
 
-    - name: Check if packages folder exists
-      run: |
-        if (Test-Path "packages\raylib.5.5.0") {
-          Write-Host "✅ raylib package found!"
-          dir packages\raylib.5.5.0
-        } else {
-          Write-Host "❌ raylib package NOT found! Trying manual install..."
-          nuget install raylib -Version 5.5.0 -OutputDirectory packages
-        }
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
-    - name: Build Solution
-      run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64
+      - name: Build Solution
+        run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64
