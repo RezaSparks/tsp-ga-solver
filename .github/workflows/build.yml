@@ -1,0 +1,26 @@
+name: Build with VS2022
+
+on:
+  push:
+    branches: [ main, refactor/improve-repo ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1
+
+    - name: Restore NuGet packages (raylib)
+      run: nuget restore TSP_GA.sln
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Build Solution
+      run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64
