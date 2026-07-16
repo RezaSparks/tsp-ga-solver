@@ -9,7 +9,6 @@
 #include "ga/population.h"
 #include "visualization/renderer.h"
 
-
 #define WIN_W 900
 #define WIN_H 700
 
