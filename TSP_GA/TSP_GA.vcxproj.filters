@@ -27,27 +27,24 @@
     <ClCompile Include="src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="city.cpp">
+    <ClCompile Include="src\city.cpp">
       <Filter>tsp</Filter>
     </ClCompile>
-    <ClCompile Include="population.cpp">
+    <ClCompile Include="src\population.cpp">
       <Filter>ga</Filter>
     </ClCompile>
-    <ClCompile Include="renderer.cpp">
+    <ClCompile Include="src\renderer.cpp">
       <Filter>visualization</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\GetFuncs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tsp\city.h">
+    <ClInclude Include="include\tsp\city.h">
       <Filter>tsp</Filter>
     </ClInclude>
-    <ClInclude Include="ga\population.h">
+    <ClInclude Include="include\ga\population.h">
       <Filter>ga</Filter>
     </ClInclude>
-    <ClInclude Include="visualization\renderer.h">
+    <ClInclude Include="include\visualization\renderer.h">
       <Filter>visualization</Filter>
     </ClInclude>
   </ItemGroup>

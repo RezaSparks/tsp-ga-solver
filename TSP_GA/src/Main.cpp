@@ -1,92 +1,92 @@
-// Main.cpp
-#define _CRT_SECURE_NO_WARNINGS
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+// src/main.cpp
+//
+// Entry point. For this milestone the behavior is intentionally identical
+// to the original program (interactive prompts, always-on visualization):
+// CLI arguments and a headless mode are separate Milestone 1 checklist
+// items that will replace this interactive flow in a later step.
 #include <raylib.h>
 
-#include "tsp/city.h"
-#include "ga/population.h"
-#include "visualization/renderer.h"
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <vector>
 
-#define WIN_W 900
-#define WIN_H 700
+#include "include/ga/population.h"
+#include "include/tsp/city.h"
+#include "include/visualization/renderer.h"
+
+namespace {
+    constexpr int kWindowWidth = 900;
+    constexpr int kWindowHeight = 700;
+} // namespace
 
 int main() {
-    srand((unsigned int)time(NULL));
-    int n, pop_size, generations;
-    double mutation_rate;
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-    printf("Enter number of cities: ");
-    scanf("%d", &n);
-    printf("Population size: ");
-    scanf("%d", &pop_size);
-    printf("Generations: ");
-    scanf("%d", &generations);
-    printf("Mutation rate (0-1): ");
-    scanf("%lf", &mutation_rate);
+    int n = 0, pop_size = 0, generations = 0;
+    double mutation_rate = 0.0;
 
-    city_t* cities = (city_t*)malloc(n * sizeof(city_t));
-    input_cities(cities, n);   // <-- uses the new parenthesized input
+    std::printf("Enter number of cities: ");
+    std::scanf("%d", &n);
+    std::printf("Population size: ");
+    std::scanf("%d", &pop_size);
+    std::printf("Generations: ");
+    std::scanf("%d", &generations);
+    std::printf("Mutation rate (0-1): ");
+    std::scanf("%lf", &mutation_rate);
 
-    population_t* pop = init_population(cities, n, pop_size);
-    evaluate_fitness(pop, cities, n);
+    std::vector<tsp::City> cities(n);
+    tsp::input_cities(cities.data(), n);
 
-    InitWindow(WIN_W, WIN_H, "TSP Genetic Algorithm");
+    tsp::ga::Population pop = tsp::ga::init_population(cities.data(), n, pop_size);
+    tsp::ga::evaluate_fitness(pop, cities.data(), n);
+
+    InitWindow(kWindowWidth, kWindowHeight, "TSP Genetic Algorithm");
     SetTargetFPS(60);
 
     int gen = 0;
-    int best = 0; // will store index of best route
+    std::size_t best = 0;
 
     // ---------- MAIN GENETIC ALGORITHM LOOP ----------
     while (!WindowShouldClose() && gen < generations) {
-        next_generation(pop, cities, n, mutation_rate);
-        evaluate_fitness(pop, cities, n);
+        tsp::ga::next_generation(pop, cities.data(), n, mutation_rate);
+        tsp::ga::evaluate_fitness(pop, cities.data(), n);
         gen++;
 
-        // Find best route of this generation
         best = 0;
-        for (int i = 1; i < pop->size; i++) {
-            if (pop->routes[i].fitness < pop->routes[best].fitness)
-                best = i;
+        for (std::size_t i = 1; i < pop.routes.size(); i++) {
+            if (pop.routes[i].fitness < pop.routes[best].fitness) best = i;
         }
 
         BeginDrawing();
         ClearBackground(BLACK);
-        draw_route(cities, pop->routes[best].route, n, gen);
+        tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(), n, gen);
         EndDrawing();
     }
 
     // ---------- FINAL SCREEN: show the best solution and wait ----------
-    // Re-find best one last time (in case loop exited due to window close)
     best = 0;
-    for (int i = 1; i < pop->size; i++) {
-        if (pop->routes[i].fitness < pop->routes[best].fitness)
-            best = i;
+    for (std::size_t i = 1; i < pop.routes.size(); i++) {
+        if (pop.routes[i].fitness < pop.routes[best].fitness) best = i;
     }
 
-    // Display final result and hold the window open
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(BLACK);
-        draw_route(cities, pop->routes[best].route, n, gen);
+        tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(), n, gen);
         DrawText("FINAL SOLUTION - Press any key or ESC to close", 10, 30, 20, YELLOW);
         EndDrawing();
 
-        if (GetKeyPressed() != 0) break;  // any key closes the graphics window
-        WaitTime(0.1); // prevent 100% CPU usage
+        if (GetKeyPressed() != 0) break;
+        WaitTime(0.1);
     }
 
     CloseWindow();
 
-    // ---------- CONSOLE PAUSE ----------
-    // Print the best length and wait for Enter
-    printf("\nBest route length found: %.2f\n", pop->routes[best].fitness);
-    printf("Press Enter to close this console...");
-    getchar(); // consume leftover newline from previous scanf
-    getchar(); // wait for actual Enter press
+    std::printf("\nBest route length found: %.2f\n", pop.routes[best].fitness);
+    std::printf("Press Enter to close this console...");
+    std::getchar();
+    std::getchar();
 
-    free(cities);
-    free_population(pop);
     return 0;
 }
