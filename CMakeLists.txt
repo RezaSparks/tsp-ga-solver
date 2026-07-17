@@ -48,6 +48,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(raylib)
 
+# cxxopts: header-only CLI argument parser (Issue #4). Keep its own
+# examples/tests out of our build.
+set(CXXOPTS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(CXXOPTS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    cxxopts
+    GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+    GIT_TAG        v3.2.1
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(cxxopts)
+
 # ---------------------------------------------------------------------------
 # Core library: the TSP + GA logic, kept separate from main() so that
 # /tests can link against it directly without pulling in an executable.
@@ -73,10 +86,23 @@ target_include_directories(tsp_visualization PUBLIC
 target_link_libraries(tsp_visualization PUBLIC raylib)
 
 # ---------------------------------------------------------------------------
+# CLI library: argument parsing (Issue #4), isolated so it can be extended
+# for Issue #5 (headless flag) and reused by /tests without pulling in
+# raylib or main().
+# ---------------------------------------------------------------------------
+add_library(tsp_cli STATIC
+    src/cli.cpp
+)
+target_include_directories(tsp_cli PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_link_libraries(tsp_cli PUBLIC cxxopts::cxxopts)
+
+# ---------------------------------------------------------------------------
 # Main executable
 # ---------------------------------------------------------------------------
 add_executable(tsp_solver src/main.cpp)
-target_link_libraries(tsp_solver PRIVATE tsp_core tsp_visualization)
+target_link_libraries(tsp_solver PRIVATE tsp_core tsp_visualization tsp_cli)
 
 # raylib on Linux needs a few system libs when built from source; on
 # macOS/Windows these are no-ops or handled by raylib's own CMake config.

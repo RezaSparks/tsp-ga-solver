@@ -1,9 +1,9 @@
 // src/main.cpp
 //
-// Entry point. For this milestone the behavior is intentionally identical
-// to the original program (interactive prompts, always-on visualization):
-// CLI arguments and a headless mode are separate Milestone 1 checklist
-// items that will replace this interactive flow in a later step.
+// Entry point. As of Issue #4, all GA parameters come from CLI flags
+// instead of interactive scanf prompts, and cities are randomly generated
+// (file-based input is Milestone 2, "Load data from files"). Visualization
+// is still always-on for now -- toggling it off via a flag is Issue #5.
 #include <raylib.h>
 
 #include <cstdio>
@@ -11,35 +11,30 @@
 #include <ctime>
 #include <vector>
 
+#include "include/cli/options.h"
 #include "include/ga/population.h"
 #include "include/tsp/city.h"
 #include "include/visualization/renderer.h"
 
 namespace {
-    constexpr int kWindowWidth = 900;
-    constexpr int kWindowHeight = 700;
+constexpr int kWindowWidth = 900;
+constexpr int kWindowHeight = 700;
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    const tsp::cli::ParseResult parsed = tsp::cli::parse_args(argc, argv);
+    if (parsed.status == tsp::cli::ParseStatus::ExitOk) return 0;
+    if (parsed.status == tsp::cli::ParseStatus::ExitError) return 1;
+    const tsp::cli::Config& config = parsed.config;
+
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-    int n = 0, pop_size = 0, generations = 0;
-    double mutation_rate = 0.0;
+    std::vector<tsp::City> cities(config.num_cities);
+    tsp::init_cities_random(cities.data(), config.num_cities);
 
-    std::printf("Enter number of cities: ");
-    std::scanf("%d", &n);
-    std::printf("Population size: ");
-    std::scanf("%d", &pop_size);
-    std::printf("Generations: ");
-    std::scanf("%d", &generations);
-    std::printf("Mutation rate (0-1): ");
-    std::scanf("%lf", &mutation_rate);
-
-    std::vector<tsp::City> cities(n);
-    tsp::input_cities(cities.data(), n);
-
-    tsp::ga::Population pop = tsp::ga::init_population(cities.data(), n, pop_size);
-    tsp::ga::evaluate_fitness(pop, cities.data(), n);
+    tsp::ga::Population pop =
+        tsp::ga::init_population(cities.data(), config.num_cities, config.population_size);
+    tsp::ga::evaluate_fitness(pop, cities.data(), config.num_cities);
 
     InitWindow(kWindowWidth, kWindowHeight, "TSP Genetic Algorithm");
     SetTargetFPS(60);
@@ -48,9 +43,9 @@ int main() {
     std::size_t best = 0;
 
     // ---------- MAIN GENETIC ALGORITHM LOOP ----------
-    while (!WindowShouldClose() && gen < generations) {
-        tsp::ga::next_generation(pop, cities.data(), n, mutation_rate);
-        tsp::ga::evaluate_fitness(pop, cities.data(), n);
+    while (!WindowShouldClose() && gen < config.generations) {
+        tsp::ga::next_generation(pop, cities.data(), config.num_cities, config.mutation_rate);
+        tsp::ga::evaluate_fitness(pop, cities.data(), config.num_cities);
         gen++;
 
         best = 0;
@@ -60,7 +55,8 @@ int main() {
 
         BeginDrawing();
         ClearBackground(BLACK);
-        tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(), n, gen);
+        tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(),
+                                        config.num_cities, gen);
         EndDrawing();
     }
 
@@ -73,7 +69,8 @@ int main() {
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(BLACK);
-        tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(), n, gen);
+        tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(),
+                                        config.num_cities, gen);
         DrawText("FINAL SOLUTION - Press any key or ESC to close", 10, 30, 20, YELLOW);
         EndDrawing();
 
@@ -84,9 +81,6 @@ int main() {
     CloseWindow();
 
     std::printf("\nBest route length found: %.2f\n", pop.routes[best].fitness);
-    std::printf("Press Enter to close this console...");
-    std::getchar();
-    std::getchar();
 
     return 0;
 }
