@@ -9,13 +9,16 @@
 namespace tsp::cli {
 
 // All GA parameters that used to be entered interactively via scanf.
-// Extended by later issues: Issue #5 adds a `headless` flag here, Issue
-// #6 doesn't need a new field (it just changes what main() prints).
+// `headless` (Issue #5) skips window creation/drawing entirely so the
+// solver can run in CI, over SSH, or in any environment without a
+// display. Issue #6 doesn't need a new field -- it just changes what
+// main() prints at the end.
 struct Config {
     int num_cities = 20;
     int population_size = 100;
     int generations = 500;
     double mutation_rate = 0.02;
+    bool headless = false;
 };
 
 // What main() should do after parsing.

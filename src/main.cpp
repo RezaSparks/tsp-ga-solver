@@ -1,9 +1,9 @@
 // src/main.cpp
 //
-// Entry point. As of Issue #4, all GA parameters come from CLI flags
-// instead of interactive scanf prompts, and cities are randomly generated
-// (file-based input is Milestone 2, "Load data from files"). Visualization
-// is still always-on for now -- toggling it off via a flag is Issue #5.
+// Entry point. As of Issue #5, visualization is entirely optional: pass
+// --headless to run the GA loop with no window, no Raylib calls, and no
+// dependency on a display -- suitable for CI, SSH sessions, or scripted
+// batch runs (Milestone 6 builds on exactly this).
 #include <raylib.h>
 
 #include <cstdio>
@@ -36,14 +36,19 @@ int main(int argc, char** argv) {
         tsp::ga::init_population(cities.data(), config.num_cities, config.population_size);
     tsp::ga::evaluate_fitness(pop, cities.data(), config.num_cities);
 
-    InitWindow(kWindowWidth, kWindowHeight, "TSP Genetic Algorithm");
-    SetTargetFPS(60);
+    if (!config.headless) {
+        InitWindow(kWindowWidth, kWindowHeight, "TSP Genetic Algorithm");
+        SetTargetFPS(60);
+    }
 
     int gen = 0;
     std::size_t best = 0;
 
     // ---------- MAIN GENETIC ALGORITHM LOOP ----------
-    while (!WindowShouldClose() && gen < config.generations) {
+    // In windowed mode this also stops early if the user closes the
+    // window; in headless mode there's no window to close, so it just
+    // runs for the requested number of generations.
+    while (gen < config.generations && (config.headless || !WindowShouldClose())) {
         tsp::ga::next_generation(pop, cities.data(), config.num_cities, config.mutation_rate);
         tsp::ga::evaluate_fitness(pop, cities.data(), config.num_cities);
         gen++;
@@ -53,32 +58,40 @@ int main(int argc, char** argv) {
             if (pop.routes[i].fitness < pop.routes[best].fitness) best = i;
         }
 
-        BeginDrawing();
-        ClearBackground(BLACK);
-        tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(),
-                                        config.num_cities, gen);
-        EndDrawing();
+        if (!config.headless) {
+            BeginDrawing();
+            ClearBackground(BLACK);
+            tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(),
+                                            config.num_cities, gen);
+            EndDrawing();
+        }
     }
 
-    // ---------- FINAL SCREEN: show the best solution and wait ----------
+    // Recompute the best route once more in case the loop above exited
+    // at gen == 0 (e.g. --generations 0 wasn't rejected by validation --
+    // it is, actually, since ParseStatus::ExitError requires >= 1, but
+    // this stays correct even if that check ever changes).
     best = 0;
     for (std::size_t i = 1; i < pop.routes.size(); i++) {
         if (pop.routes[i].fitness < pop.routes[best].fitness) best = i;
     }
 
-    while (!WindowShouldClose()) {
-        BeginDrawing();
-        ClearBackground(BLACK);
-        tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(),
-                                        config.num_cities, gen);
-        DrawText("FINAL SOLUTION - Press any key or ESC to close", 10, 30, 20, YELLOW);
-        EndDrawing();
+    if (!config.headless) {
+        // ---------- FINAL SCREEN: show the best solution and wait ----------
+        while (!WindowShouldClose()) {
+            BeginDrawing();
+            ClearBackground(BLACK);
+            tsp::visualization::draw_route(cities.data(), pop.routes[best].route.data(),
+                                            config.num_cities, gen);
+            DrawText("FINAL SOLUTION - Press any key or ESC to close", 10, 30, 20, YELLOW);
+            EndDrawing();
 
-        if (GetKeyPressed() != 0) break;
-        WaitTime(0.1);
+            if (GetKeyPressed() != 0) break;
+            WaitTime(0.1);
+        }
+
+        CloseWindow();
     }
-
-    CloseWindow();
 
     std::printf("\nBest route length found: %.2f\n", pop.routes[best].fitness);
 

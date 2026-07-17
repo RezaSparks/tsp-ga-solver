@@ -26,6 +26,7 @@ ParseResult parse_args(int argc, char** argv) {
             cxxopts::value<int>()->default_value(std::to_string(defaults.generations)))
         ("m,mutation-rate", "Mutation rate, between 0.0 and 1.0",
             cxxopts::value<double>()->default_value(std::to_string(defaults.mutation_rate)))
+        ("headless", "Run without opening a visualization window (Raylib GUI stays closed)")
         ("h,help", "Print usage and exit");
 
     ParseResult result;
@@ -43,6 +44,7 @@ ParseResult parse_args(int argc, char** argv) {
         result.config.population_size = parsed["population"].as<int>();
         result.config.generations = parsed["generations"].as<int>();
         result.config.mutation_rate = parsed["mutation-rate"].as<double>();
+        result.config.headless = parsed.count("headless") > 0;
     } catch (const cxxopts::exceptions::exception& e) {
         // Covers things like "--cities notanumber" or an unknown flag.
         std::cerr << "Error parsing arguments: " << e.what() << "\n\n";
