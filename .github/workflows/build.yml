@@ -1,4 +1,4 @@
-name: Build
+name: Build & Test
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
     strategy:
       fail-fast: false
       matrix:
@@ -25,8 +25,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
 
-      - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Configure (with tests)
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DTSP_BUILD_TESTS=ON
 
       - name: Build
         run: cmake --build build --config Release
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
