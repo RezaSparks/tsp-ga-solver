@@ -19,6 +19,29 @@
 namespace {
 constexpr int kWindowWidth = 900;
 constexpr int kWindowHeight = 700;
+
+// Issue #6: prints both the best distance found AND the actual route
+// (as visited city indices + their coordinates), not just the distance.
+// Kept as its own function so it's easy to unit-test later (Milestone 5)
+// and easy to swap for a file-writer in Milestone 2 ("Save results",
+// "Export the final route") without touching main()'s control flow.
+void print_final_results(const tsp::City* cities, const tsp::ga::Route& best_route, int n) {
+    std::printf("\n===== Final Results =====\n");
+    std::printf("Cities:        %d\n", n);
+    std::printf("Best distance: %.2f\n", best_route.fitness);
+    std::printf("\nBest route (visiting order, returns to the start at the end):\n");
+
+    for (int i = 0; i < n; i++) {
+        const int city_index = best_route.route[i];
+        std::printf("  %3d: city %-3d (%d, %d)\n",
+                    i, city_index, cities[city_index].x, cities[city_index].y);
+    }
+    // Show the closing edge back to the starting city explicitly, since
+    // the tour is a cycle.
+    const int start_index = best_route.route[0];
+    std::printf("  %3d: city %-3d (%d, %d)  <- back to start\n",
+                n, start_index, cities[start_index].x, cities[start_index].y);
+}
 } // namespace
 
 int main(int argc, char** argv) {
@@ -93,7 +116,7 @@ int main(int argc, char** argv) {
         CloseWindow();
     }
 
-    std::printf("\nBest route length found: %.2f\n", pop.routes[best].fitness);
+    print_final_results(cities.data(), pop.routes[best], config.num_cities);
 
     return 0;
 }
