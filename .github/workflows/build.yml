@@ -1,27 +1,32 @@
-name: Build with VS2022
+name: Build
 
 on:
   push:
-    branches: [ main, refactor/code-cleanup ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
+      - name: Install X11/OpenGL dev libraries (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
 
-      - name: Restore NuGet packages
-        run: nuget restore TSP_GA.sln
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Build Solution
-        run: msbuild TSP_GA.sln /p:Configuration=Release /p:Platform=x64
+      - name: Build
+        run: cmake --build build --config Release
