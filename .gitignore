@@ -30,6 +30,10 @@ build/
 bin/
 obj/
 out/
+intermediates/         
+*.tlog    
+*.idb             
+*.ipdb                  
 
 # ========== Visual Studio IDE / User Files ==========
 .vs/
