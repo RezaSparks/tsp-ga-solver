@@ -6,10 +6,12 @@ A cross-platform C++17 implementation of a Genetic Algorithm to solve the Travel
 
 ## Features
 - ✅ Real-time visualization of the evolving route
-- ✅ Modular C++ architecture (GA, TSP core, Renderer)
+- ✅ Modular C++ architecture (GA, TSP core, Renderer, CLI)
 - ✅ Tournament selection + Ordered Crossover (OX)
 - ✅ Elitism to preserve the best solutions
-- ✅ Configurable population size, generations, and mutation rate
+- ✅ Configurable population size, generations, and mutation rate via CLI flags
+- ✅ Headless mode (`--headless`) for running without a display — CI, SSH, batch runs
+- ✅ Reproducible runs via `--seed`
 - ✅ Cross-platform CMake build (Linux, macOS, Windows — no Visual Studio required)
 
 ## Demo
@@ -35,17 +37,32 @@ sudo apt-get install libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev li
 ```
 
 ## How to Use
-Run the executable. Enter the number of cities, population size, generations, and mutation rate when prompted. Watch the algorithm find a shorter route in real-time!
+Cities are randomly generated; configure everything via CLI flags:
+
+```bash
+./tsp_solver --cities 30 --population 100 --generations 500 --mutation-rate 0.02
+```
+
+Add `--headless` to run without opening a window (CI, SSH, batch runs), and `--seed N` for a reproducible run:
+```bash
+./tsp_solver --headless --cities 30 --generations 500 --seed 42
+```
+
+Run `./tsp_solver --help` for the full flag list, or see `examples/README.md` for more sample commands and the planned input-file format.
+
+At the end of a run it prints the best distance found **and** the full best route (visiting order + coordinates of every city).
 
 ## Project Structure
 - `/src` - Source files, including the main entry point
 - `/include/ga` - Genetic Algorithm core (selection, crossover, mutation)
 - `/include/tsp` - City and distance logic
 - `/include/visualization` - Raylib rendering
-- `/examples` - Sample input files (coming in a future milestone)
+- `/include/cli` - CLI argument parsing
+- `/examples` - Sample input files and ready-to-run commands (see `examples/README.md`)
 - `/tests` - Unit tests (coming in a future milestone)
 
 ## Future Improvements
-- Command-line argument parsing
+- Load cities from CSV/TXT/TSPLIB files (see `examples/*.csv` for the planned format)
+- Save results / export the final route to a file
 - Support for TSPLIB standard benchmarks
 - Additional crossover operators (PMX, Cycle)
