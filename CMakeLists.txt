@@ -29,23 +29,87 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # ---------------------------------------------------------------------------
-# vcpkg toolchain
+# Dependencies: raylib, cxxopts, (optionally) GoogleTest
 # ---------------------------------------------------------------------------
-# Use vcpkg for package management. This finds dependencies installed via
-# vcpkg instead of downloading them from the internet.
-set(CMAKE_TOOLCHAIN_FILE "C:/dev/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+# Two ways to satisfy these, and both are supported here -- pick whichever
+# is available on the machine doing the build:
+#
+#   1. vcpkg (fast: no internet needed at build time once packages are
+#      installed locally). To use it, pass the toolchain file on the
+#      cmake COMMAND LINE:
+#          cmake -B build -DCMAKE_TOOLCHAIN_FILE=<path-to-vcpkg>/scripts/buildsystems/vcpkg.cmake
+#      This is the only correct way to specify it: a toolchain file only
+#      takes effect if CMake knows about it before the first project()/
+#      enable_language() call above -- setting CMAKE_TOOLCHAIN_FILE via
+#      set() *inside* this file, after project() has already run, is too
+#      late and silently does nothing. It must also never be hardcoded to
+#      one person's local path (e.g. "C:/dev/vcpkg/..."), since that
+#      breaks the build for every other machine, including CI -- which is
+#      exactly what happened when that was tried here.
+#
+#   2. FetchContent (default fallback): downloads and builds each
+#      dependency from source. Slower and needs internet, but works out
+#      of the box on any machine, which is what CI and new contributors
+#      without vcpkg set up rely on.
+#
+# find_package(... CONFIG QUIET) detects vcpkg-provided packages without
+# erroring out if they're absent, so the FetchContent fallback below only
+# runs when nothing already satisfied the dependency.
+include(FetchContent)
 
-# ---------------------------------------------------------------------------
-# Dependencies
-# ---------------------------------------------------------------------------
-find_package(raylib CONFIG REQUIRED)
-find_package(cxxopts CONFIG REQUIRED)
+find_package(raylib CONFIG QUIET)
+if(raylib_FOUND)
+    message(STATUS "raylib: found via find_package (vcpkg or system install)")
+else()
+    message(STATUS "raylib: not found via find_package -- fetching from source instead")
+    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        raylib
+        GIT_REPOSITORY https://github.com/raysan5/raylib.git
+        GIT_TAG        5.5
+        GIT_SHALLOW    TRUE
+    )
+    FetchContent_MakeAvailable(raylib)
+endif()
 
-# GoogleTest: unit testing framework. Only required when building tests.
+find_package(cxxopts CONFIG QUIET)
+if(cxxopts_FOUND)
+    message(STATUS "cxxopts: found via find_package (vcpkg or system install)")
+else()
+    message(STATUS "cxxopts: not found via find_package -- fetching from source instead")
+    set(CXXOPTS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(CXXOPTS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        cxxopts
+        GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+        GIT_TAG        v3.2.1
+        GIT_SHALLOW    TRUE
+    )
+    FetchContent_MakeAvailable(cxxopts)
+endif()
+
+# GoogleTest: unit testing framework. Only fetched/found when tests are
+# actually requested, same reasoning as before (don't pay for it on every
+# normal build).
 option(TSP_BUILD_TESTS "Build unit tests" OFF)
 
 if(TSP_BUILD_TESTS)
-    find_package(GTest CONFIG REQUIRED)
+    find_package(GTest CONFIG QUIET)
+    if(GTest_FOUND)
+        message(STATUS "GoogleTest: found via find_package (vcpkg or system install)")
+    else()
+        message(STATUS "GoogleTest: not found via find_package -- fetching from source instead")
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+        set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+        FetchContent_Declare(
+            googletest
+            GIT_REPOSITORY https://github.com/google/googletest.git
+            GIT_TAG        v1.15.2
+            GIT_SHALLOW    TRUE
+        )
+        FetchContent_MakeAvailable(googletest)
+    endif()
 endif()
 
 # ---------------------------------------------------------------------------

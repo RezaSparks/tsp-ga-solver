@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <numeric>
@@ -297,9 +298,13 @@ TEST(ElitismProperty, BestFitnessNeverWorsensWithHighMutation) {
 // =========================================================================
 // CSV Loader Tests (Issue #7)
 // =========================================================================
+// BUGFIX: these previously hardcoded "/tmp/..." paths, which don't exist
+// on Windows -- that's exactly the failure seen in CI/local Windows runs.
+// std::filesystem::temp_directory_path() resolves to the right location
+// on every platform (TMPDIR/TEMP/TMP env vars, or /tmp as a fallback).
 TEST(CsvLoader, LoadValidCsv) {
-    // Create a temporary CSV file
-    const char* temp_file = "/tmp/tsp_test_cities.csv";
+    const auto temp_file =
+        (std::filesystem::temp_directory_path() / "tsp_test_cities.csv").string();
     {
         std::ofstream f(temp_file);
         f << "x,y\n";
@@ -318,11 +323,12 @@ TEST(CsvLoader, LoadValidCsv) {
     EXPECT_DOUBLE_EQ(cities[2].x, 500.0);
     EXPECT_DOUBLE_EQ(cities[2].y, 600.0);
 
-    std::remove(temp_file);
+    std::remove(temp_file.c_str());
 }
 
 TEST(CsvLoader, RejectsTooFewCities) {
-    const char* temp_file = "/tmp/tsp_test_few.csv";
+    const auto temp_file =
+        (std::filesystem::temp_directory_path() / "tsp_test_few.csv").string();
     {
         std::ofstream f(temp_file);
         f << "x,y\n";
@@ -332,12 +338,14 @@ TEST(CsvLoader, RejectsTooFewCities) {
     std::vector<tsp::City> cities;
     EXPECT_FALSE(tsp::load_cities_from_csv(temp_file, cities));
 
-    std::remove(temp_file);
+    std::remove(temp_file.c_str());
 }
 
 TEST(CsvLoader, RejectsMissingFile) {
+    const auto missing_file =
+        (std::filesystem::temp_directory_path() / "tsp_nonexistent_file_12345.csv").string();
     std::vector<tsp::City> cities;
-    EXPECT_FALSE(tsp::load_cities_from_csv("/tmp/nonexistent_file_12345.csv", cities));
+    EXPECT_FALSE(tsp::load_cities_from_csv(missing_file, cities));
 }
 
 } // namespace
