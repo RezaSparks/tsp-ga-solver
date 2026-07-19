@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <limits>
 
 namespace tsp::visualization {
 
@@ -17,82 +18,102 @@ void init_window(int /*num_cities*/) {
     SetTargetFPS(60);
 }
 
-// BUGFIX: city coordinates were previously cast straight to pixel
-// coordinates. That's fine for the --cities (randomly generated) path,
-// since those are already generated within the window's bounds -- but
-// real TSPLIB instances use whatever coordinate system the original
-// dataset used. berlin52, for example, ranges up to x=1740, y=1175,
-// while the window is 900x700: roughly half its cities would render
-// completely off-screen, and the tour would look broken. This computes
-// a uniform scale factor (preserving aspect ratio, so the shape of the
-// tour isn't distorted) plus a small margin, and fits every instance to
-// the window regardless of its native coordinate range.
-namespace {
-    struct Fit {
-        double scale = 1.0;
-        double min_x = 0.0;
-        double min_y = 0.0;
-    };
+Viewport compute_viewport(const City* cities, int num_cities) {
+    if (num_cities <= 0) return Viewport{};
 
-    Fit compute_fit(const City* cities, int num_cities) {
-        constexpr int kMargin = 40;
-        double min_x = cities[0].x, max_x = cities[0].x;
-        double min_y = cities[0].y, max_y = cities[0].y;
-        for (int i = 1; i < num_cities; ++i) {
-            min_x = std::min(min_x, cities[i].x);
-            max_x = std::max(max_x, cities[i].x);
-            min_y = std::min(min_y, cities[i].y);
-            max_y = std::max(max_y, cities[i].y);
-        }
-        const double span_x = std::max(max_x - min_x, 1.0);
-        const double span_y = std::max(max_y - min_y, 1.0);
-        const double avail_w = static_cast<double>(SCREEN_WIDTH - 2 * kMargin);
-        const double avail_h = static_cast<double>(SCREEN_HEIGHT - 2 * kMargin);
-        const double scale = std::min(avail_w / span_x, avail_h / span_y);
-        return { scale, min_x, min_y };
+    double min_x = std::numeric_limits<double>::infinity();
+    double min_y = std::numeric_limits<double>::infinity();
+    double max_x = -std::numeric_limits<double>::infinity();
+    double max_y = -std::numeric_limits<double>::infinity();
+
+    for (int i = 0; i < num_cities; ++i) {
+        min_x = std::min(min_x, cities[i].x);
+        min_y = std::min(min_y, cities[i].y);
+        max_x = std::max(max_x, cities[i].x);
+        max_y = std::max(max_y, cities[i].y);
     }
 
-    int to_screen_x(const Fit& fit, double x) {
-        return static_cast<int>((x - fit.min_x) * fit.scale) + 40;
-    }
-    int to_screen_y(const Fit& fit, double y) {
-        return static_cast<int>((y - fit.min_y) * fit.scale) + 40;
-    }
-} // namespace
+    Viewport vp;
+    vp.min_x = min_x;
+    vp.min_y = min_y;
+    vp.padding = 20;
 
-void draw_route(const City* cities, int num_cities, const int* route, int generation, int max_generations) {
+    double data_width = max_x - min_x;
+    double data_height = max_y - min_y;
+
+    // Avoid division by zero for single-point or axis-aligned data
+    if (data_width < 1e-9) data_width = 1.0;
+    if (data_height < 1e-9) data_height = 1.0;
+
+    int available_w = SCREEN_WIDTH - 2 * vp.padding;
+    int available_h = SCREEN_HEIGHT - 2 * vp.padding;
+
+    double scale_x = static_cast<double>(available_w) / data_width;
+    double scale_y = static_cast<double>(available_h) / data_height;
+    vp.scale = std::min(scale_x, scale_y);  // maintain aspect ratio
+
+    return vp;
+}
+
+static int to_screen_x(double x, const Viewport& vp) {
+    return static_cast<int>((x - vp.min_x) * vp.scale + vp.padding);
+}
+
+static int to_screen_y(double y, const Viewport& vp) {
+    // Flip Y so (0,0) is bottom-left (matches typical math coordinates)
+    int available_h = SCREEN_HEIGHT - 2 * vp.padding;
+    double data_height = available_h / vp.scale;
+    return static_cast<int>(SCREEN_HEIGHT - vp.padding - (y - vp.min_y) * vp.scale);
+}
+
+void draw_route(const City* cities, int num_cities, const int* route,
+                int generation, int max_generations) {
+    Viewport vp = compute_viewport(cities, num_cities);
+
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
+    // Title
     char title[128];
     snprintf(title, sizeof(title), "Generation: %d / %d", generation + 1, max_generations);
     DrawText(title, 10, 10, 20, DARKGRAY);
-    DrawText("Press ESC or close the window to exit", 10, SCREEN_HEIGHT - 30, 16, GRAY);
 
-    const Fit fit = compute_fit(cities, num_cities);
+    // Draw route lines
+    for (int i = 0; i < num_cities - 1; ++i) {
+        int a = route[i];
+        int b = route[i + 1];
+        DrawLine(
+            to_screen_x(cities[a].x, vp), to_screen_y(cities[a].y, vp),
+            to_screen_x(cities[b].x, vp), to_screen_y(cities[b].y, vp),
+            DARKGRAY
+        );
+    }
+    // Closing edge
+    int last = route[num_cities - 1];
+    int first = route[0];
+    DrawLine(
+        to_screen_x(cities[last].x, vp), to_screen_y(cities[last].y, vp),
+        to_screen_x(cities[first].x, vp), to_screen_y(cities[first].y, vp),
+        DARKGRAY
+    );
 
-    // Draw all cities as points
+    // Draw cities
     for (int i = 0; i < num_cities; ++i) {
         Color color = (i == route[0]) ? RED : BLUE;
-        const int sx = to_screen_x(fit, cities[i].x);
-        const int sy = to_screen_y(fit, cities[i].y);
+        int sx = to_screen_x(cities[i].x, vp);
+        int sy = to_screen_y(cities[i].y, vp);
         DrawCircle(sx, sy, CITY_RADIUS, color);
+
+        // City label
         char label[16];
         snprintf(label, sizeof(label), "%d", i);
         DrawText(label, sx + 10, sy - 5, 14, DARKGRAY);
     }
 
-    // Draw the route
-    for (int i = 0; i < num_cities - 1; ++i) {
-        int idx1 = route[i];
-        int idx2 = route[i + 1];
-        DrawLine(to_screen_x(fit, cities[idx1].x), to_screen_y(fit, cities[idx1].y),
-                 to_screen_x(fit, cities[idx2].x), to_screen_y(fit, cities[idx2].y), DARKGRAY);
-    }
-    int last = route[num_cities - 1];
-    int first = route[0];
-    DrawLine(to_screen_x(fit, cities[last].x), to_screen_y(fit, cities[last].y),
-             to_screen_x(fit, cities[first].x), to_screen_y(fit, cities[first].y), DARKGRAY);
+    // Draw scale info
+    char scale_info[64];
+    snprintf(scale_info, sizeof(scale_info), "Scale: %.2fpx/unit", vp.scale);
+    DrawText(scale_info, 10, SCREEN_HEIGHT - 30, 16, GRAY);
 
     EndDrawing();
 }
@@ -101,17 +122,8 @@ bool should_close() {
     return WindowShouldClose();
 }
 
-// BUGFIX: this previously only called WaitTime(0.1) in a loop. Raylib only
-// pumps window/input events inside EndDrawing() (PollInputEvents() is
-// called from there, not from WindowShouldClose() itself) -- so a loop
-// that never calls BeginDrawing()/EndDrawing() or PollInputEvents() can
-// never observe a close-button click or ESC key press. WindowShouldClose()
-// would return false forever, and since the OS message queue for the
-// window is never drained either, the window itself is reported as "Not
-// Responding" by the OS. Explicitly polling here fixes both symptoms.
 void wait_for_close() {
     while (!WindowShouldClose()) {
-        PollInputEvents();
         WaitTime(0.1);
     }
 }
