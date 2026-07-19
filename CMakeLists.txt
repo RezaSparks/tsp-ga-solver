@@ -57,6 +57,49 @@ endif()
 # runs when nothing already satisfied the dependency.
 include(FetchContent)
 
+# ---------------------------------------------------------------------------
+# Diagnostics: make it obvious *why* find_package will or won't see vcpkg,
+# instead of silently sliding into a slow FetchContent download when it
+# doesn't. Print this unconditionally (not just on failure) so it shows up
+# on every configure and is easy to compare against what you expect.
+# ---------------------------------------------------------------------------
+if(CMAKE_TOOLCHAIN_FILE)
+    message(STATUS "CMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
+else()
+    message(STATUS "CMAKE_TOOLCHAIN_FILE is not set -- vcpkg packages will not be found; "
+                    "FetchContent will be used for every dependency below.")
+endif()
+if(DEFINED VCPKG_TARGET_TRIPLET)
+    message(STATUS "VCPKG_TARGET_TRIPLET = ${VCPKG_TARGET_TRIPLET}")
+endif()
+# VCPKG_TOOLCHAIN is the variable vcpkg's own toolchain script sets once it
+# has actually run (it's how the script guards against re-running itself).
+# It's a much more reliable signal than checking for any specific installed
+# package, since it tells us definitively whether the toolchain executed
+# at all, independent of which packages happen to be installed.
+if(DEFINED VCPKG_TOOLCHAIN)
+    message(STATUS "vcpkg toolchain ran  = ${VCPKG_TOOLCHAIN}")
+endif()
+# If CMAKE_TOOLCHAIN_FILE was set but VCPKG_TOOLCHAIN never got defined,
+# the toolchain file was never actually processed -- almost always because
+# this build/ directory was configured once before *without* it, and CMake
+# is silently reusing that stale cache. The fix is:
+#     rm -rf build   (or: rmdir /s /q build   on Windows)
+# then reconfigure from scratch with the toolchain flag. A toolchain file
+# is a one-time, first-configure-only setting -- passing it again on an
+# already-configured build directory has no effect. (This project's
+# CMakePresets.json sidesteps this by giving vcpkg and non-vcpkg builds
+# separate binaryDir locations, so their caches can never collide.)
+if(CMAKE_TOOLCHAIN_FILE AND NOT DEFINED VCPKG_TOOLCHAIN)
+    message(WARNING
+        "CMAKE_TOOLCHAIN_FILE is set but vcpkg does not appear to have run. "
+        "This almost always means the build directory was configured once "
+        "before without the toolchain file, and CMake is reusing that "
+        "stale cache. Delete the build directory entirely and reconfigure "
+        "from scratch, e.g.: rm -rf build && cmake -B build "
+        "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+endif()
+
 find_package(raylib CONFIG QUIET)
 if(raylib_FOUND)
     message(STATUS "raylib: found via find_package (vcpkg or system install)")

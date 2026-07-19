@@ -1,0 +1,39 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 23, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default (FetchContent, no vcpkg)",
+      "description": "Matches CI: no toolchain file, all deps fetched from source. Works on any machine, no setup required.",
+      "binaryDir": "${sourceDir}/build/default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "vcpkg",
+      "displayName": "Local dev (vcpkg)",
+      "description": "Uses vcpkg-installed packages -- fast, no network needed. Requires the VCPKG_ROOT environment variable to point at your vcpkg checkout (e.g. setx VCPKG_ROOT C:\\dev\\vcpkg on Windows, or export VCPKG_ROOT=~/vcpkg on Linux/macOS). Deliberately does NOT hardcode a path here -- a path that's correct on one machine breaks the build for everyone else who clones this repo, which is exactly what happened before this file existed.",
+      "binaryDir": "${sourceDir}/build/vcpkg",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "vcpkg-tests",
+      "displayName": "Local dev (vcpkg) + tests",
+      "inherits": "vcpkg",
+      "binaryDir": "${sourceDir}/build/vcpkg-tests",
+      "cacheVariables": {
+        "TSP_BUILD_TESTS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "default", "configurePreset": "default", "configuration": "Release" },
+    { "name": "vcpkg", "configurePreset": "vcpkg", "configuration": "Release" },
+    { "name": "vcpkg-tests", "configurePreset": "vcpkg-tests", "configuration": "Release" }
+  ]
+}

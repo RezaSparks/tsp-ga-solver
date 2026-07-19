@@ -2,6 +2,7 @@
 #include "include/tsp/city.h"
 
 #include <cmath>
+#include <cctype>
 #include <cstdio>
 #include <fstream>
 #include <random>

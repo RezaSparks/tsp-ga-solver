@@ -2,6 +2,7 @@
 #include "include/visualization/renderer.h"
 
 #include <raylib.h>
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 
@@ -16,6 +17,49 @@ void init_window(int /*num_cities*/) {
     SetTargetFPS(60);
 }
 
+// BUGFIX: city coordinates were previously cast straight to pixel
+// coordinates. That's fine for the --cities (randomly generated) path,
+// since those are already generated within the window's bounds -- but
+// real TSPLIB instances use whatever coordinate system the original
+// dataset used. berlin52, for example, ranges up to x=1740, y=1175,
+// while the window is 900x700: roughly half its cities would render
+// completely off-screen, and the tour would look broken. This computes
+// a uniform scale factor (preserving aspect ratio, so the shape of the
+// tour isn't distorted) plus a small margin, and fits every instance to
+// the window regardless of its native coordinate range.
+namespace {
+    struct Fit {
+        double scale = 1.0;
+        double min_x = 0.0;
+        double min_y = 0.0;
+    };
+
+    Fit compute_fit(const City* cities, int num_cities) {
+        constexpr int kMargin = 40;
+        double min_x = cities[0].x, max_x = cities[0].x;
+        double min_y = cities[0].y, max_y = cities[0].y;
+        for (int i = 1; i < num_cities; ++i) {
+            min_x = std::min(min_x, cities[i].x);
+            max_x = std::max(max_x, cities[i].x);
+            min_y = std::min(min_y, cities[i].y);
+            max_y = std::max(max_y, cities[i].y);
+        }
+        const double span_x = std::max(max_x - min_x, 1.0);
+        const double span_y = std::max(max_y - min_y, 1.0);
+        const double avail_w = static_cast<double>(SCREEN_WIDTH - 2 * kMargin);
+        const double avail_h = static_cast<double>(SCREEN_HEIGHT - 2 * kMargin);
+        const double scale = std::min(avail_w / span_x, avail_h / span_y);
+        return { scale, min_x, min_y };
+    }
+
+    int to_screen_x(const Fit& fit, double x) {
+        return static_cast<int>((x - fit.min_x) * fit.scale) + 40;
+    }
+    int to_screen_y(const Fit& fit, double y) {
+        return static_cast<int>((y - fit.min_y) * fit.scale) + 40;
+    }
+} // namespace
+
 void draw_route(const City* cities, int num_cities, const int* route, int generation, int max_generations) {
     BeginDrawing();
     ClearBackground(RAYWHITE);
@@ -25,26 +69,30 @@ void draw_route(const City* cities, int num_cities, const int* route, int genera
     DrawText(title, 10, 10, 20, DARKGRAY);
     DrawText("Press ESC or close the window to exit", 10, SCREEN_HEIGHT - 30, 16, GRAY);
 
+    const Fit fit = compute_fit(cities, num_cities);
+
     // Draw all cities as points
     for (int i = 0; i < num_cities; ++i) {
         Color color = (i == route[0]) ? RED : BLUE;
-        DrawCircle(static_cast<int>(cities[i].x), static_cast<int>(cities[i].y), CITY_RADIUS, color);
+        const int sx = to_screen_x(fit, cities[i].x);
+        const int sy = to_screen_y(fit, cities[i].y);
+        DrawCircle(sx, sy, CITY_RADIUS, color);
         char label[16];
         snprintf(label, sizeof(label), "%d", i);
-        DrawText(label, static_cast<int>(cities[i].x) + 10, static_cast<int>(cities[i].y) - 5, 14, DARKGRAY);
+        DrawText(label, sx + 10, sy - 5, 14, DARKGRAY);
     }
 
     // Draw the route
     for (int i = 0; i < num_cities - 1; ++i) {
         int idx1 = route[i];
         int idx2 = route[i + 1];
-        DrawLine(static_cast<int>(cities[idx1].x), static_cast<int>(cities[idx1].y),
-                 static_cast<int>(cities[idx2].x), static_cast<int>(cities[idx2].y), DARKGRAY);
+        DrawLine(to_screen_x(fit, cities[idx1].x), to_screen_y(fit, cities[idx1].y),
+                 to_screen_x(fit, cities[idx2].x), to_screen_y(fit, cities[idx2].y), DARKGRAY);
     }
     int last = route[num_cities - 1];
     int first = route[0];
-    DrawLine(static_cast<int>(cities[last].x), static_cast<int>(cities[last].y),
-             static_cast<int>(cities[first].x), static_cast<int>(cities[first].y), DARKGRAY);
+    DrawLine(to_screen_x(fit, cities[last].x), to_screen_y(fit, cities[last].y),
+             to_screen_x(fit, cities[first].x), to_screen_y(fit, cities[first].y), DARKGRAY);
 
     EndDrawing();
 }

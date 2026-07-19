@@ -128,9 +128,13 @@ namespace tsp::cli {
                       << result.config.num_cities << ")\n";
             return result;
         }
-        if (result.config.population_size < 2) {
-            std::cerr << "Error: --population must be at least 2 (got "
-                      << result.config.population_size << ")\n";
+        if (result.config.population_size < 4) {
+            std::cerr << "Error: --population must be at least 4 (got "
+                      << result.config.population_size << "). "
+                      << "Elitism reserves 2 slots for the best routes, so anything "
+                      << "below 4 leaves no room for actual offspring -- the GA would "
+                      << "run for as many generations as you like without ever "
+                      << "evolving.\n";
             return result;
         }
         if (result.config.generations < 1) {

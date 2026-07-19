@@ -8,8 +8,11 @@
 //   - Convergence CSV export (--output-csv)
 //   - Crossover/mutation operator selection (--crossover, --mutation)
 
-#include <iostream>
+#include <cmath>
+#include <cstdio>
 #include <fstream>
+#include <iostream>
+#include <limits>
 #include <memory>
 #include <random>
 #include <vector>
@@ -99,19 +102,14 @@ static RunResult run_ga(const std::vector<tsp::City>& cities,
         generation++;
     }
 
-    // Final best
-    int best_idx = 0;
-    for (int i = 1; i < config.population_size; ++i) {
-        if (pop.routes[i].fitness < pop.routes[best_idx].fitness) {
-            best_idx = i;
-        }
-    }
-
-    if (pop.routes[best_idx].fitness < global_best) {
-        global_best = pop.routes[best_idx].fitness;
-        global_best_route = pop.routes[best_idx].route;
-        global_best_gen = generation;
-    }
+    // NOTE: no post-loop "final best" rescan here (a previous version had
+    // one). It's dead code by construction: the while loop above already
+    // evaluates fitness and checks every route against global_best on its
+    // very last iteration, including the final generation. Re-scanning
+    // `pop` again afterwards inspects the exact same, already-considered
+    // data -- it can never find something better than what the loop just
+    // recorded, so it was removed rather than kept as defensive-looking
+    // code that doesn't actually defend against anything.
 
     RunResult result;
     result.best_distance = global_best;
