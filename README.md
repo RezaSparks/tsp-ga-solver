@@ -7,7 +7,7 @@ A cross-platform C++17 implementation of a Genetic Algorithm to solve the Travel
 ## ✨ Features
 
 - 🎯 **High-performance C++17 GA core** — Tournament selection, elitism, and configurable operators
-- 📊 **Beautiful matplotlib visualizations** — Route plots, convergence curves, and combined dashboards
+- 📊 **Matplotlib visualizations** — Route plots, convergence curves, and combined dashboards
 - 🗺️ **TSPLIB support** — Load real-world benchmark instances (EUC_2D)
 - 📁 **CSV import/export** — Load custom city sets and export results
 - 🔬 **Multiple GA operators** — Three crossover (OX, PMX, Cycle) and three mutation (Swap, Inversion, Scramble) operators
@@ -94,17 +94,20 @@ All plots are saved as high-resolution PNG files automatically.
 
 **Random cities with custom operators:**
 ```bash
-./tsp_solver --cities 50 --population 200 --generations 1000     --crossover ox --mutation inversion --mutation-rate 0.03
+./tsp_solver --cities 50 --population 200 --generations 1000 \
+    --crossover ox --mutation inversion --mutation-rate 0.03
 ```
 
 **TSPLIB with convergence export:**
 ```bash
-./tsp_solver --tsplib examples/berlin52.tsp     --population 300 --generations 2000 --output-csv convergence.csv
+./tsp_solver --tsplib examples/berlin52.tsp \
+    --population 300 --generations 2000 --output-csv convergence.csv
 ```
 
 **Reproducible benchmark run:**
 ```bash
-./tsp_solver --tsplib examples/berlin52.tsp --runs 10     --population 300 --generations 2000 --seed 200
+./tsp_solver --tsplib examples/berlin52.tsp --runs 10 \
+    --population 300 --generations 2000 --seed 200
 ```
 
 ## 📊 Visualization Scripts
@@ -130,9 +133,10 @@ python scripts/plot_route.py best_route.csv              # file mode
 tsp-ga-solver/
 ├── src/                    # C++ source files
 │   ├── main.cpp           # Entry point
-│   ├── ga_core.cpp        # GA implementation
-│   ├── tsp_loader.cpp     # CSV & TSPLIB parsers
-│   └── cli_parser.cpp     # Command-line parsing
+│   ├── city.cpp           # City/distance logic
+│   ├── population.cpp     # GA implementation
+│   ├── tsplib_parser.cpp # TSPLIB parser
+│   └── cli.cpp            # CLI parsing
 ├── include/               # Header files
 │   ├── ga/               # GA core (selection, crossover, mutation, elitism)
 │   ├── tsp/              # City/distance logic, loaders
@@ -142,10 +146,11 @@ tsp-ga-solver/
 │   ├── plot_convergence.py
 │   ├── plot_dashboard.py
 │   └── requirements.txt
+├── tests/                 # Unit tests (GoogleTest)
+│   └── test_core.cpp
 ├── examples/              # Sample input files
 │   ├── berlin52.tsp
 │   └── cities_20.csv
-├── tests/                 # Unit tests (GoogleTest)
 ├── CMakeLists.txt
 └── README.md
 ```
@@ -160,13 +165,13 @@ ctest --test-dir build --output-on-failure
 
 **18 tests across 5 suites:**
 
-| Suite | Coverage |
-|-------|----------|
-| `DistanceTest` | Euclidean distance correctness, symmetry |
-| `CrossoverValidity` | OX, PMX, Cycle produce valid permutations |
-| `MutationValidity` | Swap, Inversion, Scramble preserve validity |
-| `ElitismProperty` | Best fitness never worsens |
-| `CsvLoader` | CSV parsing and error handling |
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| `DistanceTest` | 4 | Euclidean distance: zero, known value, symmetry, finiteness |
+| `CrossoverValidity` | 4 | OX, PMX, Cycle produce valid permutations; multi-seed stress test |
+| `MutationValidity` | 4 | Swap, Inversion, Scramble preserve validity; multi-seed stress test |
+| `ElitismProperty` | 3 | Best fitness monotonicity under OX+Swap, PMX+Inversion, high mutation |
+| `CsvLoader` | 3 | Valid CSV load, reject too few cities, reject missing file |
 
 ## 📈 Benchmarks
 
@@ -186,7 +191,9 @@ Results against `berlin52.tsp` (52 cities, optimal: **7542**), 10 runs each:
 
 Reproduce:
 ```bash
-./build/tsp_solver --headless --tsplib examples/berlin52.tsp     --population 300 --generations 2000 --mutation-rate 0.03     --crossover ox --mutation inversion --runs 10 --seed 200
+./build/tsp_solver --tsplib examples/berlin52.tsp \
+    --population 300 --generations 2000 --mutation-rate 0.03 \
+    --crossover ox --mutation inversion --runs 10 --seed 200
 ```
 
 ## 🗺️ Roadmap
@@ -196,7 +203,6 @@ Reproduce:
 - [x] Convergence data export
 - [x] Unit tests (GoogleTest)
 - [x] Matplotlib visualization suite
-- [ ] Save/export best route to file
 - [ ] Additional TSPLIB distance types (ATT, CEIL_2D, GEO)
 - [ ] 2-opt local search hybrid
 - [ ] Animated evolution GIF generation
