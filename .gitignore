@@ -72,3 +72,18 @@ _ReSharper.Cache/
 *.opendb
 *.VC.db
 *.VC.VC.opendb
+
+# ========== TSP Solver Output Files ==========
+# Generated output directories and CSV files from solver runs
+output_*/
+*.csv
+!examples/*.csv
+
+# ========== Python Cache ==========
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/

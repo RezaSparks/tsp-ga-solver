@@ -2,38 +2,24 @@
 
 [![Build Status](https://github.com/RezaSparks/tsp-ga-solver/actions/workflows/build.yml/badge.svg)](https://github.com/RezaSparks/tsp-ga-solver/actions)
 
-A cross-platform C++17 implementation of a Genetic Algorithm to solve the Traveling Salesman Problem (TSP), with real-time Raylib visualization, TSPLIB support, and multiple selectable GA operators.
+A cross-platform C++17 implementation of a Genetic Algorithm to solve the Traveling Salesman Problem (TSP), with **matplotlib visualization**, TSPLIB support, and multiple selectable GA operators.
 
-## Features
-- ✅ Real-time visualization of the evolving route (auto-scaled to fit any coordinate range, including real-world TSPLIB instances)
-- ✅ Modular C++ architecture (GA core, TSP/city logic, Renderer, CLI, TSPLIB parser)
-- ✅ Tournament selection
-- ✅ Three crossover operators: **OX** (Ordered), **PMX** (Partially Mapped), **Cycle** — selectable via `--crossover`
-- ✅ Three mutation operators: **Swap**, **Inversion**, **Scramble** — selectable via `--mutation`
-- ✅ Elitism to preserve the best solutions
-- ✅ Load cities from **CSV** (`--csv`) or **TSPLIB** `.tsp` files (`--tsplib`, EUC_2D instances)
-- ✅ Multiple independent runs with aggregate statistics (`--runs`) — best/worst/avg/stddev across runs
-- ✅ Convergence data export to CSV (`--output-csv`) for plotting
-- ✅ Configurable population size, generations, and mutation rate via CLI flags
-- ✅ Headless mode (`--headless`) for running without a display — CI, SSH, batch runs
-- ✅ Reproducible runs via `--seed`
-- ✅ Cross-platform CMake build (Linux, macOS, Windows — no Visual Studio required), with optional vcpkg support for faster local builds
-- ✅ Unit tests with GoogleTest (18 tests: distance, crossover/mutation validity, elitism property, CSV loading)
+## ✨ Features
 
-## Demo
+- 🎯 **High-performance C++17 GA core** — Tournament selection, elitism, and configurable operators
+- 📊 **Beautiful matplotlib visualizations** — Route plots, convergence curves, and combined dashboards
+- 🗺️ **TSPLIB support** — Load real-world benchmark instances (EUC_2D)
+- 📁 **CSV import/export** — Load custom city sets and export results
+- 🔬 **Multiple GA operators** — Three crossover (OX, PMX, Cycle) and three mutation (Swap, Inversion, Scramble) operators
+- 🏃 **Multiple independent runs** — Aggregate statistics (best/worst/avg/stddev) across runs
+- 📈 **Convergence tracking** — Per-generation best/average fitness export
+- 🎲 **Reproducible runs** — Fixed seed support for deterministic results
+- 🧪 **Unit tested** — 18 tests across 5 test suites
+- 🖥️ **Cross-platform** — Linux, macOS, Windows via CMake
 
-![TSP GA Solver — berlin52 benchmark](demo_berlin52.png)
+## 🚀 Quick Start
 
-*This image shows real solver output — the actual best route found for the `berlin52` TSPLIB instance (52 cities), rendered from the solver's own coordinate and route data, in the same visual style as the live app (OX crossover + inversion mutation, seed 42).*
-
-> **Note:** this is a static rendering of real solver output, not a live screen capture of the Raylib window (the environment used to prepare this image has no display attached). If you'd like an actual screen recording: run `./tsp_solver --cities 40 --generations 500` (drop `--headless`) and capture the window with your OS's screenshot/GIF tool (e.g. ScreenToGif on Windows, `Cmd+Shift+5` on macOS, Peek on Linux) — a short GIF of the route visibly improving over ~5-10 seconds makes a great addition here.
-
-## How to Build
-
-Requires CMake 3.16+ and a C++17 compiler (GCC, Clang, or MSVC).
-
-### Option 1: Default (FetchContent — works everywhere, no setup)
-Raylib, cxxopts, and (if building tests) GoogleTest are downloaded and built automatically.
+### 1. Clone & Build
 
 ```bash
 git clone https://github.com/RezaSparks/tsp-ga-solver.git
@@ -42,155 +28,184 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
 
-### Option 2: vcpkg (faster local builds, if you already have vcpkg installed)
-```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
-cmake --build build --config Release
-```
-CMake automatically detects whether vcpkg-installed packages (`raylib`, `cxxopts`, `gtest`) are available and uses them; otherwise it falls back to FetchContent. This means the same `CMakeLists.txt` works identically in CI (no vcpkg, no changes needed) and locally (vcpkg, faster rebuilds).
+> **Requirements:** CMake 3.16+, C++17 compiler (GCC, Clang, or MSVC)
 
-The executable is written to `build/tsp_solver` (or `build/Release/tsp_solver.exe` on Windows with the Visual Studio generator).
-
-On Linux, you'll also need the X11/OpenGL dev headers Raylib builds against:
-```bash
-sudo apt-get install libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
-```
-
-### Building with Tests
+### 2. Run the Solver
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DTSP_BUILD_TESTS=ON
-cmake --build build --config Release
-ctest --test-dir build --output-on-failure
+# Random cities
+./build/tsp_solver --cities 30 --population 100 --generations 500
+
+# TSPLIB benchmark
+./build/tsp_solver --tsplib examples/berlin52.tsp --population 200 --generations 1000
+
+# Multiple runs with statistics
+./build/tsp_solver --tsplib examples/berlin52.tsp --runs 10 --seed 42
 ```
 
-## How to Use
+### 3. Visualize Results
 
-### Basic Run (with visualization, random cities)
 ```bash
-./tsp_solver --cities 30 --population 100 --generations 500 --mutation-rate 0.02
+# Install Python dependencies
+pip install -r scripts/requirements.txt
+
+# Plot the best route
+python scripts/plot_route.py output_<timestamp>/
+
+# Plot convergence curve
+python scripts/plot_convergence.py output_<timestamp>/
+
+# Combined dashboard
+python scripts/plot_dashboard.py output_<timestamp>/
 ```
 
-### Load a TSPLIB instance (EUC_2D only)
-```bash
-./tsp_solver --tsplib examples/berlin52.tsp --population 200 --generations 1000 --crossover ox --mutation inversion
-```
+All plots are saved as high-resolution PNG files automatically.
 
-### Load cities from CSV
-```bash
-./tsp_solver --csv examples/cities_20.csv --population 100 --generations 300
-```
+## 📸 Demo
 
-### Compare crossover/mutation operators over multiple runs (headless)
-```bash
-./tsp_solver --headless --tsplib examples/berlin52.tsp --crossover pmx --mutation scramble --runs 10 --seed 42
-```
+![TSP GA Solver — berlin52 benchmark](demo_berlin52.png)
 
-### Export convergence data for plotting
-```bash
-./tsp_solver --headless --cities 30 --generations 300 --output-csv convergence.csv
-```
-> Note: with `--runs > 1`, only the first run's convergence data is written (a single CSV can't cleanly represent multiple independent curves) — the console output still reports aggregate best/worst/avg/stddev across all runs.
+*Best route found for the `berlin52` TSPLIB instance (52 cities) using OX crossover + inversion mutation, seed 42. Generated via matplotlib from solver output data.*
 
-### Reproducible Run (same result every time)
-```bash
-./tsp_solver --headless --cities 10 --population 50 --generations 200 --seed 42
-```
+## 📖 Usage
 
-### All CLI Flags
+### Basic CLI
+
 ```bash
-./tsp_solver --help
+./tsp_solver [OPTIONS]
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--cities, -n` | 20 | Number of cities to randomly generate (ignored if `--tsplib` or `--csv` is used) |
-| `--population, -p` | 100 | Population size (minimum 4 — elitism reserves 2 slots for the best routes, so anything less leaves no room for actual offspring) |
-| `--generations, -g` | 500 | Number of generations to run |
+| `--cities, -n` | 20 | Number of random cities to generate |
+| `--population, -p` | 100 | Population size (min: 4) |
+| `--generations, -g` | 500 | Number of generations |
 | `--mutation-rate, -m` | 0.02 | Mutation probability (0.0–1.0) |
-| `--crossover` | `ox` | Crossover operator: `ox`, `pmx`, `cycle` |
-| `--mutation` | `swap` | Mutation operator: `swap`, `inversion`, `scramble` |
-| `--tsplib` | — | Load cities from a TSPLIB `.tsp` file (EUC_2D only) |
-| `--csv` | — | Load cities from a CSV file (header `x,y`, one city per line) |
-| `--output-csv` | — | Export per-generation convergence data (best/avg fitness) to a CSV file |
-| `--runs` | 1 | Number of independent runs; prints aggregate best/worst/avg/stddev |
-| `--seed` | 0 | Random seed (0 = auto, any other value = fixed for reproducibility) |
-| `--headless` | false | Run without opening the Raylib visualization window |
-| `--help, -h` | — | Print usage and exit |
+| `--crossover` | `ox` | Crossover: `ox`, `pmx`, `cycle` |
+| `--mutation` | `swap` | Mutation: `swap`, `inversion`, `scramble` |
+| `--tsplib` | — | Load from TSPLIB `.tsp` file (EUC_2D) |
+| `--csv` | — | Load from CSV file (header: `x,y`) |
+| `--runs` | 1 | Number of independent runs |
+| `--seed` | 0 | Random seed (0 = auto) |
+| `--output-csv` | — | Export convergence data to CSV |
+| `--help, -h` | — | Show help |
 
-At the end of a run, the solver prints the best distance found and the full best route (visiting order + coordinates).
+### Examples
 
-## Project Structure
-- `/src` — Source files, including the main entry point
-- `/include/ga` — Genetic Algorithm core (selection, crossover, mutation, elitism)
-- `/include/tsp` — City/distance logic, CSV loader, TSPLIB parser
-- `/include/visualization` — Raylib rendering
-- `/include/cli` — CLI argument parsing
-- `/examples` — Sample input files (CSV, TSPLIB) and ready-to-run commands
-- `/tests` — Unit tests (GoogleTest)
+**Random cities with custom operators:**
+```bash
+./tsp_solver --cities 50 --population 200 --generations 1000     --crossover ox --mutation inversion --mutation-rate 0.03
+```
 
-## Tests
+**TSPLIB with convergence export:**
+```bash
+./tsp_solver --tsplib examples/berlin52.tsp     --population 300 --generations 2000 --output-csv convergence.csv
+```
 
-18 tests across 5 suites:
+**Reproducible benchmark run:**
+```bash
+./tsp_solver --tsplib examples/berlin52.tsp --runs 10     --population 300 --generations 2000 --seed 200
+```
 
-| Test Suite | What It Checks |
-|------------|----------------|
-| `DistanceTest` | Euclidean distance correctness, symmetry, zero distance for identical points |
-| `CrossoverValidity` | OX, PMX, and Cycle crossover all produce valid permutations (no duplicates, no missing cities) across many seeds |
-| `MutationValidity` | Swap, Inversion, and Scramble mutation all preserve permutation validity across many seeds |
-| `ElitismProperty` | Best fitness never worsens across generations — holds under PMX+Inversion and under high mutation rates |
-| `CsvLoader` | Valid CSV loads correctly; malformed/too-small/missing files are rejected with a clear error |
+## 📊 Visualization Scripts
 
-Run tests:
+The `scripts/` directory contains Python tools for analyzing solver output:
+
+| Script | Purpose | Output |
+|--------|---------|--------|
+| `plot_route.py` | Plot the best-found route | `route.png` |
+| `plot_convergence.py` | Plot fitness over generations | `convergence.png` |
+| `plot_dashboard.py` | Combined route + convergence | `dashboard.png` |
+
+All scripts accept either a directory path (auto-detects files) or individual CSV files:
+
+```bash
+python scripts/plot_dashboard.py output_1234567890/     # directory mode
+python scripts/plot_route.py best_route.csv              # file mode
+```
+
+## 🏗️ Project Structure
+
+```
+tsp-ga-solver/
+├── src/                    # C++ source files
+│   ├── main.cpp           # Entry point
+│   ├── ga_core.cpp        # GA implementation
+│   ├── tsp_loader.cpp     # CSV & TSPLIB parsers
+│   └── cli_parser.cpp     # Command-line parsing
+├── include/               # Header files
+│   ├── ga/               # GA core (selection, crossover, mutation, elitism)
+│   ├── tsp/              # City/distance logic, loaders
+│   └── cli/              # CLI argument parsing
+├── scripts/               # Python visualization tools
+│   ├── plot_route.py
+│   ├── plot_convergence.py
+│   ├── plot_dashboard.py
+│   └── requirements.txt
+├── examples/              # Sample input files
+│   ├── berlin52.tsp
+│   └── cities_20.csv
+├── tests/                 # Unit tests (GoogleTest)
+├── CMakeLists.txt
+└── README.md
+```
+
+## 🧪 Testing
+
 ```bash
 cmake -B build -DTSP_BUILD_TESTS=ON
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-## Benchmarks
+**18 tests across 5 suites:**
 
-Real results from this solver against `examples/berlin52.tsp` (52 cities, known optimal tour length: **7542**), 10 independent runs each, `--seed 100`/`--seed 200` for reproducibility:
+| Suite | Coverage |
+|-------|----------|
+| `DistanceTest` | Euclidean distance correctness, symmetry |
+| `CrossoverValidity` | OX, PMX, Cycle produce valid permutations |
+| `MutationValidity` | Swap, Inversion, Scramble preserve validity |
+| `ElitismProperty` | Best fitness never worsens |
+| `CsvLoader` | CSV parsing and error handling |
 
-| Crossover | Mutation | Population | Generations | Best | Avg | Worst | Std Dev | Gap to optimal |
-|---|---|---|---|---|---|---|---|---|
+## 📈 Benchmarks
+
+Results against `berlin52.tsp` (52 cities, optimal: **7542**), 10 runs each:
+
+| Crossover | Mutation | Pop | Gens | Best | Avg | Worst | Std Dev | Gap |
+|-----------|----------|-----|------|------|-----|-------|---------|-----|
 | OX | Swap | 200 | 1000 | 8874.27 | 9636.52 | 10007.33 | 294.00 | +17.7% |
 | PMX | Swap | 200 | 1000 | 9498.83 | 10538.72 | 11426.32 | 563.57 | +25.9% |
 | Cycle | Swap | 200 | 1000 | 10554.94 | 11197.54 | 11947.18 | 477.54 | +39.9% |
-| OX | Inversion | 300 | 2000 | **7825.42** | 8188.91 | 8470.43 | 225.92 | **+3.8%** |
+| **OX** | **Inversion** | **300** | **2000** | **7825.42** | **8188.91** | **8470.43** | **225.92** | **+3.8%** |
 
-Takeaways from this data:
-- **OX consistently outperforms PMX and Cycle** on this instance at matched settings — both in best-found and consistency (lower std dev).
-- **Inversion mutation clearly helps** over plain Swap: it makes larger, structured changes (reversing a sub-tour) that suit TSP's geometry better than swapping two arbitrary cities.
-- With a larger population and more generations, OX+Inversion gets within **~3.8% of the known optimal** for berlin52 — a solid result for a GA without local search (2-opt hybridization, a roadmap item below, would likely close most of the remaining gap).
+**Key findings:**
+- **OX** consistently outperforms PMX and Cycle
+- **Inversion mutation** significantly improves results over Swap
+- Within **~3.8% of optimal** for berlin52 without local search
 
-Reproduce these numbers yourself:
+Reproduce:
 ```bash
-./build/tsp_solver --headless --tsplib examples/berlin52.tsp --population 300 --generations 2000 \
-    --mutation-rate 0.03 --crossover ox --mutation inversion --runs 10 --seed 200
+./build/tsp_solver --headless --tsplib examples/berlin52.tsp     --population 300 --generations 2000 --mutation-rate 0.03     --crossover ox --mutation inversion --runs 10 --seed 200
 ```
 
-## Roadmap
+## 🗺️ Roadmap
 
-- [x] Fix LICENSE
-- [x] Replace `std::rand()` with modern `<random>`
-- [x] Add `--seed` for reproducible runs
-- [x] Add `--headless` mode
-- [x] Refactor renderer API (auto-scales to fit any coordinate range)
-- [x] Add unit tests with GoogleTest
-- [x] Load cities from CSV files (`--csv`)
-- [x] Load cities from TSPLIB files (`--tsplib`, EUC_2D)
-- [x] Additional crossover operators (PMX, Cycle)
-- [x] Additional mutation operators (Inversion, Scramble)
-- [x] Multiple independent runs with aggregate statistics (`--runs`)
-- [x] Convergence data export to CSV (`--output-csv`)
-- [x] Optional vcpkg support alongside FetchContent
-- [ ] Save/export the final best route to a file (currently console-only)
-- [ ] Support additional TSPLIB distance types (ATT, CEIL_2D, GEO) — currently EUC_2D only
-- [ ] 2-opt local search post-processing / GA+2-opt hybrid
-- [ ] Convergence plots (matplotlib/gnuplot script consuming `--output-csv` output)
-- [ ] Live web demo (Emscripten)
+- [x] C++17 GA core with multiple operators
+- [x] TSPLIB & CSV support
+- [x] Convergence data export
+- [x] Unit tests (GoogleTest)
+- [x] Matplotlib visualization suite
+- [ ] Save/export best route to file
+- [ ] Additional TSPLIB distance types (ATT, CEIL_2D, GEO)
+- [ ] 2-opt local search hybrid
+- [ ] Animated evolution GIF generation
+- [ ] Live web demo
 
-## License
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## 📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
